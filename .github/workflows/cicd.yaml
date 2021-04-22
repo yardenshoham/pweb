@@ -31,3 +31,18 @@ jobs:
         echo "Pushing image to ECR..."
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+    - name: Deploy to cluster
+      uses: kodermax/kubectl-aws-eks@master
+      env:
+        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      with:
+        args: rollout restart deployment/pweb
+
+    - name: Verify deployment
+      uses: kodermax/kubectl-aws-eks@master
+      env:
+        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+      with:
+        args: rollout status deployment/pweb
